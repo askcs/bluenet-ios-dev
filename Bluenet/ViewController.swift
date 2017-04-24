@@ -12,9 +12,6 @@ import SwiftyJSON
 import CoreBluetooth
 import PromiseKit
 
-import BluenetBasicLocalization
-import BluenetShared
-
 
 class ViewController: UIViewController {
     var target : String? = nil
@@ -297,11 +294,11 @@ class ViewController: UIViewController {
     @IBAction func EncryptionSwitch(_ sender: AnyObject) {
         if let mySwitch = sender as? UISwitch {
             if (mySwitch.isOn) {
-                self.bluenet.setSettings(encryptionEnabled: true, adminKey: "adminKeyForCrown", memberKey: "memberKeyForHome", guestKey: "guestKeyForGirls", referenceId:"test")
+                self.bluenet.setSettings(encryptionEnabled: true, adminKey: "adminKeyForCrown", memberKey: "memberKeyForHome", guestKey: "guestKeyForGirls", collectionId:"test")
                 label.text = "Toggled Encryption On"
             }
             else {
-                self.bluenet.setSettings(encryptionEnabled: false, adminKey: "adminKeyForCrown", memberKey: "memberKeyForHome", guestKey: "guestKeyForGirls", referenceId:"test")
+                self.bluenet.setSettings(encryptionEnabled: false, adminKey: "adminKeyForCrown", memberKey: "memberKeyForHome", guestKey: "guestKeyForGirls", collectionId:"test")
                 label.text = "Toggled Encryption OFF"
             }
 
@@ -490,7 +487,7 @@ class ViewController: UIViewController {
     @IBAction func putSettings(_ sender: Any) {
         if (target != nil) {
             label.text = "Setting Settings"
-            self.bluenet.setSettings(encryptionEnabled: true, adminKey: adminkey.text, memberKey: nil, guestKey: guestkey.text, referenceId: "test")
+            self.bluenet.setSettings(encryptionEnabled: true, adminKey: adminkey.text, memberKey: nil, guestKey: guestkey.text, collectionId: "test")
         }
         else {
             label.text = "no target"
@@ -504,7 +501,7 @@ class ViewController: UIViewController {
     }
     
     func _revertDevKeys() {
-        self.bluenet.setSettings(encryptionEnabled: true, adminKey: "adminKeyForCrown", memberKey: "memberKeyForHome", guestKey: "guestKeyForGirls", referenceId: "test")
+        self.bluenet.setSettings(encryptionEnabled: true, adminKey: "adminKeyForCrown", memberKey: "memberKeyForHome", guestKey: "guestKeyForGirls", collectionId: "test")
     }
     
     func startLoop() {
@@ -516,8 +513,6 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var CountingLabelReference: UILabel!
     var counter = 0
-    
-    var classifier : CrownstoneBasicClassifier!
     
     override func viewDidAppear(_ animated: Bool) {
         self.nearestSetup.text = "None found"
@@ -539,18 +534,12 @@ class ViewController: UIViewController {
         // alerts for bluetooth and navigation usage.
         BluenetLib.setBluenetGlobals(viewController: self, appName: "Crownstone", loggingFile: true)
         self.bluenet = Bluenet()
-        
-        //classifier = CrownstoneBasicClassifier()
-        
         self.bluenetLocalization = BluenetLocalization()
-        
         //self.bluenetMotion = BluenetMotion()
         
         // default
         self._revertDevKeys()
     
-        
-        delay(5, {_ in  self.bluenetLocalization.trackIBeacon(uuid: "191e82c7-9ad7-415e-b47d-52e77dc04373", referenceId: "57f387e61153bd03000eb632")})
         
         // forward the navigation event stream to react native
         _ = self.bluenetLocalization.on("iBeaconAdvertisement", {ibeaconData -> Void in
@@ -560,8 +549,10 @@ class ViewController: UIViewController {
                     returnArray.append(packet.getDictionary())
                 }
             }
-            
+            self.counter = self.counter + 1
+            self.CountingLabelReference.text = "\(self.counter) + \(self.bluenetLocalization.indoorLocalizationEnabled)"
         })
+        
         
         
         _ = self.bluenetLocalization.on("lowLevelEnterRegion", {data -> Void in
@@ -574,11 +565,7 @@ class ViewController: UIViewController {
                 print("$$$ lowLevelExitRegion \(castData)")
             }
         })
-        _ = self.bluenetLocalization.on("enterRegion", {data -> Void in
-            if let castData = data as? String {
-                print("$$$ enterRegion \(castData)")
-            }
-        })
+        
         _ = self.bluenet.on("setupProgress", {data -> Void in
             if let castData = data as? Int {
                 self.label.text = "setupProgress \(castData)"
@@ -645,14 +632,13 @@ class ViewController: UIViewController {
                 }
             }
         })
-       
         
         //self.bluenetLocalization.clearTrackedBeacons()
         _ = self.bluenet.isReady()
             .then{_ in self.bluenet.startScanningForCrownstones()}
         
         self.bluenetLocalization.startIndoorLocalization();
-        // self.bluenetLocalization.trackIBeacon(uuid: "191e82c7-9ad7-415e-b47d-52e77dc04373", referenceId: "57f387e61153bd03000eb632")
+        self.bluenetLocalization.trackIBeacon(uuid: "1843423e-e175-4af0-a2e4-31e32f729a8a", collectionId: "57f387e61153bd03000eb632")
     }
 
     
@@ -864,7 +850,7 @@ class ViewController: UIViewController {
         })
         
         // track the ibeaconUUID
-        self.bluenetLocalization.trackIBeacon(uuid: uuid, referenceId: "ref")
+        self.bluenetLocalization.trackIBeacon(uuid: uuid, collectionId: "ref")
     }
     
     
